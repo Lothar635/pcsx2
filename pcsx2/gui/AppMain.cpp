@@ -31,6 +31,11 @@
 
 #include "Debugger/DisassemblyDialog.h"
 
+#ifndef DISABLE_RECORDING
+#	include "Recording/RecordingControls.h"
+#	include "Recording/InputRecording.h"
+#endif
+
 #include "Utilities/IniInterface.h"
 #include "Utilities/AppTrait.h"
 
@@ -59,7 +64,7 @@
 #include <wx/osx/private.h>		// needed to implement the app!
 #endif
 
-IMPLEMENT_APP(Pcsx2App)
+wxIMPLEMENT_APP(Pcsx2App);
 
 std::unique_ptr<AppConfig> g_Conf;
 
@@ -227,7 +232,7 @@ void Pcsx2App::PostMenuAction( MenuIdentifiers menu_id ) const
 class Pcsx2AppMethodEvent : public pxActionEvent
 {
 	typedef pxActionEvent _parent;
-	DECLARE_DYNAMIC_CLASS_NO_ASSIGN(Pcsx2AppMethodEvent)
+	wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(Pcsx2AppMethodEvent);
 
 protected:
 	FnPtr_Pcsx2App	m_Method;
@@ -267,7 +272,7 @@ protected:
 };
 
 
-IMPLEMENT_DYNAMIC_CLASS( Pcsx2AppMethodEvent, pxActionEvent )
+wxIMPLEMENT_DYNAMIC_CLASS( Pcsx2AppMethodEvent, pxActionEvent );
 
 #ifdef __WXMSW__
 extern int TranslateVKToWXK( u32 keysym );
@@ -517,7 +522,7 @@ extern bool EnableFMV;
 
 void DoFmvSwitch(bool on)
 {
-	if (g_Conf->GSWindow.IsToggleAspectRatioSwitch) {
+	if (g_Conf->GSWindow.FMVAspectRatioSwitch != FMV_AspectRatio_Switch_Off) {
 		if (on) {
 			switchAR = true;
 			iniAR = g_Conf->GSWindow.AspectRatio;
@@ -546,7 +551,7 @@ void Pcsx2App::LogicalVsync()
 
 	FpsManager.DoFrame();
 	
-	if (EmuConfig.Gamefixes.FMVinSoftwareHack || g_Conf->GSWindow.IsToggleAspectRatioSwitch) {
+	if (EmuConfig.Gamefixes.FMVinSoftwareHack || g_Conf->GSWindow.FMVAspectRatioSwitch != FMV_AspectRatio_Switch_Off) {
 		if (EnableFMV) {
 			DevCon.Warning("FMV on");
 			DoFmvSwitch(true);
@@ -607,7 +612,28 @@ void Pcsx2App::HandleEvent(wxEvtHandler* handler, wxEventFunction func, wxEvent&
 
 void Pcsx2App::HandleEvent(wxEvtHandler* handler, wxEventFunction func, wxEvent& event)
 {
-	try {
+	try
+	{
+#ifndef DISABLE_RECORDING
+		if (g_Conf->EmuOptions.EnableRecordingTools)
+		{
+			if (g_RecordingControls.HasRecordingStopped())
+			{
+				// While stopping, GSFrame key event also stops, so get key input from here
+				// Along with that, you can not use the shortcut keys set in GSFrame
+				if (PADkeyEvent != NULL)
+				{
+					// Acquire key information, possibly calling it only once per frame
+					const keyEvent* ev = PADkeyEvent();
+					if (ev != NULL)
+					{
+						sApp.Recording_PadKeyDispatch(*ev);
+					}
+				}
+			}
+			g_RecordingControls.ResumeCoreThreadIfStarted();
+		}
+#endif
 		(handler->*func)(event);
 	}
 	// ----------------------------------------------------------------------------
@@ -1030,6 +1056,13 @@ void Pcsx2App::OnProgramLogClosed( wxWindowID id )
 
 void Pcsx2App::OnMainFrameClosed( wxWindowID id )
 {
+#ifndef DISABLE_RECORDING
+	if (g_Conf->EmuOptions.EnableRecordingTools)
+	{
+		g_InputRecording.Stop();
+	}
+#endif
+
 	// Nothing threaded depends on the mainframe (yet) -- it all passes through the main wxApp
 	// message handler.  But that might change in the future.
 	if( m_id_MainFrame != id ) return;
@@ -1089,6 +1122,7 @@ protected:
 
 		CoreThread.ResetQuick();
 		symbolMap.Clear();
+		CBreakPoints::SetSkipFirst(0);
 
 		CDVDsys_SetFile(CDVD_SourceType::Iso, g_Conf->CurrentIso );
 		if( m_UseCDVDsrc )

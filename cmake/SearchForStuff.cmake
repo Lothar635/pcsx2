@@ -4,6 +4,8 @@
 ## Use cmake package to find module
 if (Linux)
     find_package(ALSA)
+    find_package(PCAP)
+    find_package(LibXml2)
 endif()
 find_package(Freetype) # GSdx OSD
 find_package(Gettext) # translation tool
@@ -11,6 +13,10 @@ if(EXISTS ${PROJECT_SOURCE_DIR}/.git)
     find_package(Git)
 endif()
 find_package(LibLZMA)
+
+# Using find_package OpenGL without either setting your opengl preference to GLVND or LEGACY
+# is deprecated as of cmake 3.11.
+set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL)
 find_package(PNG)
 find_package(Vtune)
@@ -94,6 +100,7 @@ if(Linux)
 endif()
 if(EGL_API)
     check_lib(EGL EGL EGL/egl.h)
+    check_lib(X11_XCB X11-xcb X11/Xlib-xcb.h)
 endif()
 if(OPENCL_API)
     check_lib(OPENCL OpenCL CL/cl.hpp)
@@ -170,6 +177,14 @@ endif()
 
 if(wxWidgets_FOUND)
 	include(${wxWidgets_USE_FILE})
+endif()
+
+if(PCAP_FOUND)
+	include_directories(${PCAP_INCLUDE_DIR})
+endif()
+
+if(LIBXML2_FOUND)
+	include_directories(${LIBXML2_INCLUDE_DIRS})
 endif()
 
 if(ZLIB_FOUND)

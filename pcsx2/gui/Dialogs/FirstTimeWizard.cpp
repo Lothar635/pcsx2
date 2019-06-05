@@ -26,7 +26,7 @@
 using namespace Panels;
 using namespace pxSizerFlags;
 
-IMPLEMENT_DYNAMIC_CLASS(ApplicableWizardPage, wxWizardPageSimple)
+wxIMPLEMENT_DYNAMIC_CLASS(ApplicableWizardPage, wxWizardPageSimple);
 
 ApplicableWizardPage::ApplicableWizardPage( wxWizard* parent, wxWizardPage* prev, wxWizardPage* next, const wxBitmap& bitmap )
 	: wxWizardPageSimple( parent, prev, next, bitmap )
@@ -100,7 +100,7 @@ Panels::FirstTimeIntroPanel::FirstTimeIntroPanel( wxWindow* parent )
 	*this += GetCharHeight() * 2;
 
 	*this	+= new wxHyperlinkCtrl( this, wxID_ANY,
-		_("Configuration Guides (online)"), L"http://www.pcsx2.net/guide.php"
+		_("Configuration Guides (online)"), L"https://pcsx2.net/config-guide/official-english-pcsx2-configuration-guide.html"
 	) | pxCenter.Border( wxALL, 5 );
 		
 	*this	+= new wxHyperlinkCtrl( this, wxID_ANY,

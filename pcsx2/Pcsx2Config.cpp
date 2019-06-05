@@ -49,7 +49,7 @@ Pcsx2Config::SpeedhackOptions& Pcsx2Config::SpeedhackOptions::DisableAll()
 {
 	bitset			= 0;
 	EECycleRate		= 0;
-	VUCycleSteal	= 0;
+	EECycleSkip		= 0;
 	
 	return *this;
 }
@@ -59,7 +59,7 @@ void Pcsx2Config::SpeedhackOptions::LoadSave( IniInterface& ini )
 	ScopedIniGroup path( ini, L"Speedhacks" );
 
 	IniBitfield( EECycleRate );
-	IniBitfield( VUCycleSteal );
+	IniBitfield( EECycleSkip );
 	IniBitBool( fastCDVD );
 	IniBitBool( IntcStat );
 	IniBitBool( WaitLoop );
@@ -267,7 +267,8 @@ const wxChar *const tbl_GamefixNames[] =
 	L"GIFFIFO",
 	L"FMVinSoftware",
 	L"GoemonTlb",
-	L"ScarfaceIbit"
+	L"ScarfaceIbit",
+    L"CrashTagTeamRacingIbit"
 };
 
 const __fi wxChar* EnumToString( GamefixId id )
@@ -331,6 +332,7 @@ void Pcsx2Config::GamefixOptions::Set( GamefixId id, bool enabled )
 		case Fix_FMVinSoftware:	FMVinSoftwareHack	= enabled;  break;
 		case Fix_GoemonTlbMiss: GoemonTlbHack		= enabled;  break;
 		case Fix_ScarfaceIbit:  ScarfaceIbit        = enabled;  break;
+        case Fix_CrashTagTeamIbit: CrashTagTeamRacingIbit = enabled; break;
 		jNO_DEFAULT;
 	}
 }
@@ -357,6 +359,7 @@ bool Pcsx2Config::GamefixOptions::Get( GamefixId id ) const
 		case Fix_FMVinSoftware:	return FMVinSoftwareHack;
 		case Fix_GoemonTlbMiss: return GoemonTlbHack;
 		case Fix_ScarfaceIbit:  return ScarfaceIbit;
+        case Fix_CrashTagTeamIbit: return CrashTagTeamRacingIbit;
 		jNO_DEFAULT;
 	}
 	return false;		// unreachable, but we still need to suppress warnings >_<
@@ -383,6 +386,7 @@ void Pcsx2Config::GamefixOptions::LoadSave( IniInterface& ini )
 	IniBitBool( FMVinSoftwareHack );
 	IniBitBool( GoemonTlbHack );
 	IniBitBool( ScarfaceIbit );
+    IniBitBool( CrashTagTeamRacingIbit );
 }
 
 
@@ -433,6 +437,9 @@ void Pcsx2Config::LoadSave( IniInterface& ini )
 	IniBitBool( EnablePatches );
 	IniBitBool( EnableCheats );
 	IniBitBool( EnableWideScreenPatches );
+#ifndef DISABLE_RECORDING
+	IniBitBool( EnableRecordingTools );
+#endif
 	IniBitBool( ConsoleToStdio );
 	IniBitBool( HostFs );
 

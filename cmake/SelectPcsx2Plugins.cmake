@@ -116,6 +116,15 @@ if(GTKn_FOUND)
     set(dev9null TRUE)
 endif()
 #---------------------------------------
+#			dev9ghzdrk
+#---------------------------------------
+if(GTKn_FOUND AND PCAP_FOUND AND LIBXML2_FOUND)
+    set(dev9ghzdrk TRUE)
+    list(APPEND CMAKE_MODULE_PATH
+        ${CMAKE_MODULE_PATH}/macros)
+    include(GlibCompileResourcesSupport)    
+endif()
+#---------------------------------------
 
 #---------------------------------------
 #			FWnull
@@ -141,7 +150,7 @@ endif()
 #           -X11
 #           -zlib
 #---------------------------------------
-if(OPENGL_FOUND AND X11_FOUND AND GTKn_FOUND AND ZLIB_FOUND AND PNG_FOUND AND FREETYPE_FOUND AND LIBLZMA_FOUND AND (EGL_FOUND OR NOT EGL_API))
+if(OPENGL_FOUND AND X11_FOUND AND GTKn_FOUND AND ZLIB_FOUND AND PNG_FOUND AND FREETYPE_FOUND AND LIBLZMA_FOUND AND ((EGL_FOUND AND X11_XCB_FOUND) OR NOT EGL_API))
     set(GSdx TRUE)
 elseif(NOT EXISTS "${CMAKE_SOURCE_DIR}/plugins/GSdx")
     set(GSdx FALSE)
@@ -296,13 +305,4 @@ if(GTKn_FOUND)
     set(USBnull TRUE)
 endif()
 #---------------------------------------
-
-#-------------------------------------------------------------------------------
-# Super-seeded by cdvdGigaherz
-set(CDVDpeops FALSE)
-
-# [TODO] Write CMakeLists.txt for these plugins. (or not ;) )
-set(PeopsSPU2 FALSE)
-set(SSSPSXPAD FALSE)
-set(xpad FALSE)
 #-------------------------------------------------------------------------------

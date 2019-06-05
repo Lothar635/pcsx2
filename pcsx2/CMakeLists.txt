@@ -22,6 +22,17 @@ set(CommonFlags
     -DWX_PRECOMP
 	)
 
+# Largely turning off because LegacyPluginAPI_Common in Plugins.h spams really badly in gcc 8 due to the memzero initialization.
+# Should probably be fixed properly, but for now this should work.
+if(GCC_VERSION VERSION_EQUAL "8.0" OR GCC_VERSION VERSION_GREATER "8.0")
+    set(CommonFlags
+	    ${CommonFlags}
+	    -Wno-class-memaccess
+    )
+endif()
+
+
+
 if ("${PGO}" STREQUAL "generate")
     set(pcsx2FinalFlags -fprofile-generate)
 elseif("${PGO}" STREQUAL "use")
@@ -256,14 +267,12 @@ set(pcsx2GuiSources
 	gui/ConsoleLogger.cpp
 	gui/CpuUsageProvider.cpp
 	gui/Dialogs/AboutBoxDialog.cpp
-	gui/Dialogs/AppConfigDialog.cpp
 	gui/Dialogs/AssertionDialog.cpp
 	gui/Dialogs/BaseConfigurationDialog.cpp
 	gui/Dialogs/ConfirmationDialogs.cpp
 	gui/Dialogs/ConvertMemoryCardDialog.cpp
 	gui/Dialogs/CreateMemoryCardDialog.cpp
 	gui/Dialogs/FirstTimeWizard.cpp
-	gui/Dialogs/GameDatabaseDialog.cpp
 	gui/Dialogs/ImportSettingsDialog.cpp
 	gui/Dialogs/LogOptionsDialog.cpp
 	gui/Dialogs/McdConfigDialog.cpp
@@ -291,7 +300,6 @@ set(pcsx2GuiSources
 	gui/Panels/BiosSelectorPanel.cpp
 	gui/Panels/CpuPanel.cpp
 	gui/Panels/DirPickerPanel.cpp
-	gui/Panels/GameDatabasePanel.cpp
 	gui/Panels/GameFixesPanel.cpp
 	gui/Panels/GSWindowPanel.cpp
 	gui/Panels/LogOptionsPanels.cpp
@@ -346,6 +354,7 @@ set(pcsx2GuiHeaders
 	gui/Panels/MemoryCardPanels.h
 	gui/pxEventThread.h
 	gui/RecentIsoList.h
+	gui/Saveslots.h
 	)
 
 # Warning: the declaration of the .h are mandatory in case of resources files. It will ensure the creation
@@ -452,6 +461,28 @@ set(pcsx2RDebugHeaders
 	RDebug/deci2_iloadp.h
 	RDebug/deci2_netmp.h
 	RDebug/deci2_ttyp.h)
+
+# Recording sources
+set(pcsx2RecordingSources
+	Recording/InputRecording.cpp
+	Recording/InputRecordingFile.cpp
+	Recording/NewRecordingFrame.cpp
+	Recording/PadData.cpp
+	Recording/RecordingControls.cpp
+	Recording/RecordingInputManager.cpp
+	Recording/VirtualPad.cpp
+)
+
+# Recording headers
+set(pcsx2RecordingHeaders
+	Recording/InputRecording.h
+	Recording/InputRecordingFile.h
+	Recording/NewRecordingFrame.h
+	Recording/PadData.h
+	Recording/RecordingControls.h
+	Recording/RecordingInputManager.h
+	Recording/VirtualPad.h
+)
 
 # System sources
 set(pcsx2SystemSources
@@ -610,6 +641,8 @@ set(Common
 	${pcsx2IPUHeaders}
 	${pcsx2ps2Sources}
 	${pcsx2ps2Headers}
+	${pcsx2RecordingSources}
+	${pcsx2RecordingHeaders}
 	${pcsx2SystemSources}
 	${pcsx2SystemHeaders}
 	${pcsx2UtilitiesSources}
@@ -707,3 +740,9 @@ if(USE_VTUNE)
 endif()
 
 add_pcsx2_executable(${Output} "${pcsx2FinalSources}" "${pcsx2FinalLibs}" "${pcsx2FinalFlags}")
+
+if(PACKAGE_MODE)
+	install(CODE "execute_process(COMMAND /bin/bash -c \"echo 'Enabling networking capability on Linux...';set -x; [ -f ${BIN_DIR}/${Output} ] && sudo setcap 'CAP_NET_RAW+eip CAP_NET_ADMIN+eip' ${BIN_DIR}/${Output}; set +x\")")
+else()
+	install(CODE "execute_process(COMMAND /bin/bash -c \"echo 'Enabling networking capability on Linux...';set -x; [ -f ${CMAKE_SOURCE_DIR}/bin/${Output} ] && sudo setcap 'CAP_NET_RAW+eip CAP_NET_ADMIN+eip' ${CMAKE_SOURCE_DIR}/bin/${Output}; set +x\")")
+endif()

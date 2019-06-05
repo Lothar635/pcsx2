@@ -277,6 +277,10 @@ static int loadGameSettings(Pcsx2Config& dest, const Game_Data& game) {
 
 		if (game.keyExists(key))
 		{
+			// VuClipFlag hack is only used by the SuperVu1 Recompiler.
+			if (id == Fix_VuClipFlag && (!g_Conf->EmuOptions.Cpu.Recompiler.EnableVU1 || g_Conf->EmuOptions.Cpu.Recompiler.UseMicroVU1))
+				continue;
+
 			bool enableIt = game.getBool(key);
 			dest.Gamefixes.Set(id, enableIt);
 			PatchesCon->WriteLn(L"(GameDB) %s Gamefix: " + key, enableIt ? L"Enabled" : L"Disabled");
@@ -485,6 +489,11 @@ void LoadAllPatchesAndStuff(const Pcsx2Config& cfg)
 	Pcsx2Config dummy;
 	PatchesVerboseReset();
 	_ApplySettings(cfg, dummy);
+
+	// And I'm hacking in updating the UI here too.
+#ifdef USE_SAVESLOT_UI_UPDATES
+	UI_UpdateSysControls();
+#endif
 }
 
 void AppCoreThread::ApplySettings( const Pcsx2Config& src )
